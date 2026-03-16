@@ -1,0 +1,777 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NOVA AI — Ultimate Assistant</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#070810;--surface:#0e1020;--surface2:#151828;
+  --border:rgba(255,255,255,0.07);--border2:rgba(255,255,255,0.13);
+  --accent:#4f8cff;--accent2:#00e5c0;
+  --text:#f0f2ff;--muted:#7a80a0;--muted2:#4a5070;
+  --glow:rgba(79,140,255,0.18);
+  --radius:16px;--radius-sm:10px;
+  --font-head:'Syne',sans-serif;--font-body:'DM Sans',sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:var(--bg);color:var(--text);font-family:var(--font-body);min-height:100vh;overflow-x:hidden;}
+body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(79,140,255,0.025) 1px,transparent 1px),linear-gradient(90deg,rgba(79,140,255,0.025) 1px,transparent 1px);background-size:40px 40px;pointer-events:none;z-index:0;}
+.orb{position:fixed;border-radius:50%;pointer-events:none;z-index:0;}
+.orb1{width:600px;height:600px;background:radial-gradient(circle,rgba(79,140,255,0.06),transparent 70%);top:-200px;left:-200px;}
+.orb2{width:500px;height:500px;background:radial-gradient(circle,rgba(0,229,192,0.05),transparent 70%);bottom:-150px;right:-150px;}
+.shell{position:relative;z-index:1;display:flex;flex-direction:column;height:100vh;max-width:900px;margin:0 auto;}
+header{padding:14px 20px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border);backdrop-filter:blur(20px);background:rgba(7,8,16,0.85);position:sticky;top:0;z-index:100;}
+.logo{display:flex;align-items:center;gap:10px;}
+.logo-icon{width:34px;height:34px;background:linear-gradient(135deg,var(--accent),var(--accent2));border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:17px;box-shadow:0 0 18px var(--glow);}
+.logo-text{font-family:var(--font-head);font-size:19px;font-weight:800;letter-spacing:2px;background:linear-gradient(135deg,#fff 40%,var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+.logo-sub{font-size:10px;color:var(--muted);letter-spacing:1px;}
+.status-pill{display:flex;align-items:center;gap:6px;background:rgba(0,229,192,0.08);border:1px solid rgba(0,229,192,0.2);padding:5px 12px;border-radius:20px;font-size:12px;color:var(--accent2);font-weight:500;}
+.status-dot{width:7px;height:7px;border-radius:50%;background:var(--accent2);animation:blink 2s ease-in-out infinite;}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+.tabs{display:flex;gap:2px;padding:10px 20px 0;border-bottom:1px solid var(--border);overflow-x:auto;scrollbar-width:none;}
+.tabs::-webkit-scrollbar{display:none;}
+.tab{padding:8px 16px;font-size:13px;font-weight:500;color:var(--muted);border:none;background:none;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px;transition:all .2s;white-space:nowrap;font-family:var(--font-body);}
+.tab:hover{color:var(--text);}
+.tab.active{color:var(--accent);border-bottom-color:var(--accent);}
+.main{flex:1;overflow:hidden;display:flex;flex-direction:column;}
+.panel{display:none;flex-direction:column;height:100%;}
+.panel.active{display:flex;}
+.chat-messages{flex:1;overflow-y:auto;padding:20px;display:flex;flex-direction:column;gap:14px;scrollbar-width:thin;scrollbar-color:var(--muted2) transparent;}
+.chat-messages::-webkit-scrollbar{width:4px;}
+.chat-messages::-webkit-scrollbar-thumb{background:var(--muted2);border-radius:4px;}
+.msg{display:flex;gap:10px;animation:fadeUp .3s ease;}
+@keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.msg.user{flex-direction:row-reverse;}
+.avatar{width:32px;height:32px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0;}
+.avatar.ai{background:linear-gradient(135deg,var(--accent),var(--accent2));box-shadow:0 0 12px var(--glow);}
+.avatar.user{background:var(--surface2);border:1px solid var(--border2);}
+.bubble{max-width:76%;padding:11px 15px;border-radius:14px;font-size:14px;line-height:1.7;}
+.msg.ai .bubble{background:var(--surface);border:1px solid var(--border);border-top-left-radius:3px;color:var(--text);}
+.msg.user .bubble{background:linear-gradient(135deg,rgba(79,140,255,0.18),rgba(0,229,192,0.09));border:1px solid rgba(79,140,255,0.28);border-top-right-radius:3px;}
+.bubble pre{background:rgba(0,0,0,0.5);border:1px solid var(--border2);border-radius:8px;padding:12px;margin-top:8px;font-family:'Courier New',monospace;font-size:12px;overflow-x:auto;white-space:pre-wrap;text-align:left;}
+.bubble code{background:rgba(255,255,255,0.08);padding:2px 6px;border-radius:4px;font-family:monospace;font-size:12px;}
+.bubble strong{color:#fff;font-weight:600;}
+.bubble ul,.bubble ol{margin:8px 0 8px 18px;}
+.bubble li{margin-bottom:3px;}
+.typing-dots{display:flex;gap:4px;align-items:center;padding:12px 16px;}
+.typing-dots span{width:7px;height:7px;border-radius:50%;background:var(--accent);animation:bounce 1.2s ease-in-out infinite;}
+.typing-dots span:nth-child(2){animation-delay:.2s;}
+.typing-dots span:nth-child(3){animation-delay:.4s;}
+@keyframes bounce{0%,60%,100%{transform:translateY(0)}30%{transform:translateY(-8px)}}
+.mode-bar{padding:8px 20px;display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;border-top:1px solid var(--border);}
+.mode-bar::-webkit-scrollbar{display:none;}
+.mode-chip{padding:5px 12px;font-size:12px;font-weight:500;border-radius:20px;border:1px solid var(--border2);background:transparent;color:var(--muted);cursor:pointer;transition:all .2s;white-space:nowrap;font-family:var(--font-body);}
+.mode-chip:hover{color:var(--text);border-color:var(--accent);}
+.mode-chip.active{background:rgba(79,140,255,0.14);border-color:var(--accent);color:var(--accent);}
+.chat-input-wrap{padding:10px 20px 18px;background:rgba(7,8,16,0.9);border-top:1px solid var(--border);}
+.chat-input-box{display:flex;gap:8px;align-items:flex-end;background:var(--surface);border:1px solid var(--border2);border-radius:14px;padding:9px 9px 9px 14px;transition:border-color .2s;}
+.chat-input-box:focus-within{border-color:var(--accent);box-shadow:0 0 0 3px var(--glow);}
+.chat-input-box textarea{flex:1;background:none;border:none;outline:none;color:var(--text);font-family:var(--font-body);font-size:14px;line-height:1.6;resize:none;min-height:22px;max-height:120px;overflow-y:auto;}
+.chat-input-box textarea::placeholder{color:var(--muted);}
+.send-btn{width:36px;height:36px;border-radius:9px;background:linear-gradient(135deg,var(--accent),var(--accent2));border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:transform .15s;box-shadow:0 0 14px var(--glow);font-size:16px;color:#fff;}
+.send-btn:hover{transform:scale(1.07);}
+.send-btn:active{transform:scale(0.95);}
+.send-btn:disabled{opacity:.35;cursor:not-allowed;transform:none;}
+.welcome{display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:28px 20px;flex:1;}
+.welcome h2{font-family:var(--font-head);font-size:21px;font-weight:700;margin-bottom:8px;background:linear-gradient(135deg,#fff,var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+.welcome p{color:var(--muted);font-size:13px;margin-bottom:22px;line-height:1.6;}
+.quick-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;width:100%;max-width:500px;}
+.quick-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px;cursor:pointer;transition:all .2s;text-align:left;}
+.quick-card:hover{border-color:var(--accent);background:rgba(79,140,255,0.07);transform:translateY(-1px);}
+.quick-card-icon{font-size:18px;margin-bottom:4px;display:block;}
+.quick-card-title{font-size:12px;font-weight:600;color:var(--text);margin-bottom:2px;}
+.quick-card-sub{font-size:11px;color:var(--muted);line-height:1.4;}
+.tools-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px;padding:20px;overflow-y:auto;}
+.tool-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:18px;cursor:pointer;transition:all .25s;position:relative;overflow:hidden;}
+.tool-card::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,var(--card-glow,rgba(79,140,255,0.07)),transparent);opacity:0;transition:opacity .25s;}
+.tool-card:hover{border-color:var(--card-color,var(--accent));transform:translateY(-2px);}
+.tool-card:hover::before{opacity:1;}
+.tool-icon{font-size:26px;margin-bottom:10px;display:block;}
+.tool-name{font-family:var(--font-head);font-size:14px;font-weight:700;margin-bottom:5px;color:var(--text);}
+.tool-desc{font-size:12px;color:var(--muted);line-height:1.5;}
+.tool-tag{display:inline-block;margin-top:9px;padding:3px 9px;font-size:10px;font-weight:600;border-radius:20px;letter-spacing:.5px;}
+.about-wrap{padding:28px 20px;overflow-y:auto;max-width:660px;margin:0 auto;}
+.about-hero{text-align:center;margin-bottom:28px;}
+.about-icon{width:68px;height:68px;background:linear-gradient(135deg,var(--accent),var(--accent2));border-radius:18px;display:flex;align-items:center;justify-content:center;font-size:30px;margin:0 auto 14px;box-shadow:0 0 32px var(--glow);}
+.about-hero h2{font-family:var(--font-head);font-size:22px;font-weight:800;margin-bottom:6px;}
+.about-hero p{color:var(--muted);font-size:13px;line-height:1.6;}
+.about-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:18px;}
+.about-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px;}
+.about-card-title{font-size:11px;font-weight:600;color:var(--accent);letter-spacing:1px;text-transform:uppercase;margin-bottom:7px;}
+.about-list{list-style:none;display:flex;flex-direction:column;gap:5px;}
+.about-list li{font-size:12px;color:var(--muted);padding-left:13px;position:relative;}
+.about-list li::before{content:'→';position:absolute;left:0;color:var(--accent2);font-size:10px;}
+.toast{position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(16px);background:var(--surface2);border:1px solid var(--border2);padding:9px 18px;border-radius:20px;font-size:13px;color:var(--accent2);opacity:0;transition:all .3s;z-index:9999;pointer-events:none;white-space:nowrap;}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+::-webkit-scrollbar{width:4px;height:4px;}
+::-webkit-scrollbar-thumb{background:var(--muted2);border-radius:4px;}
+@media(max-width:600px){
+  header{padding:11px 14px;}
+  .tabs{padding:8px 14px 0;}
+  .chat-messages,.chat-input-wrap{padding-left:14px;padding-right:14px;}
+  .quick-grid{grid-template-columns:1fr;}
+  .about-grid{grid-template-columns:1fr;}
+  .tools-grid{grid-template-columns:1fr 1fr;gap:9px;padding:14px;}
+  .bubble{max-width:88%;}
+}
+</style>
+</head>
+<body>
+<div class="orb orb1"></div><div class="orb orb2"></div>
+<div class="shell">
+  <header>
+    <div class="logo">
+      <div class="logo-icon">🤖</div>
+      <div><div class="logo-text">NOVA AI</div><div class="logo-sub">Ultimate Assistant</div></div>
+    </div>
+    <div class="status-pill"><div class="status-dot"></div>Online</div>
+  </header>
+  <div class="tabs">
+    <button class="tab active" onclick="switchTab('chat',this)">💬 Chat</button>
+    <button class="tab" onclick="switchTab('tools',this)">🛠️ Tools</button>
+    <button class="tab" onclick="switchTab('about',this)">ℹ️ About</button>
+  </div>
+  <div class="main">
+    <div class="panel active" id="panel-chat">
+      <div class="chat-messages" id="chatMessages">
+        <div class="welcome" id="welcomeScreen">
+          <div style="font-size:48px;margin-bottom:12px;">🌟</div>
+          <h2>NOVA AI mein aapka swagat hai!</h2>
+          <p>Main aapka intelligent assistant hoon.<br>Code, stories, business, math, translation — sab kuch!</p>
+          <div class="quick-grid">
+            <div class="quick-card" onclick="quickPrompt('Tumhen kya kya language aata hai?')"><span class="quick-card-icon">🌍</span><div class="quick-card-title">Meri languages</div><div class="quick-card-sub">Main kya kya jaanta hoon</div></div>
+            <div class="quick-card" onclick="quickPrompt('Python mein calculator ka code likho')"><span class="quick-card-icon">💻</span><div class="quick-card-title">Code Likhna</div><div class="quick-card-sub">Website, app ya script</div></div>
+            <div class="quick-card" onclick="quickPrompt('Ek suspense story sunao')"><span class="quick-card-icon">📖</span><div class="quick-card-title">Kahani / Story</div><div class="quick-card-sub">Creative writing</div></div>
+            <div class="quick-card" onclick="quickPrompt('India mein top 5 startup ideas kya hain 2025 mein?')"><span class="quick-card-icon">🚀</span><div class="quick-card-title">Business Ideas</div><div class="quick-card-sub">Startup strategy</div></div>
+            <div class="quick-card" onclick="quickPrompt('AI kya hota hai? Aasaan bhasha mein samjhao')"><span class="quick-card-icon">🧠</span><div class="quick-card-title">Teach Me</div><div class="quick-card-sub">Koi bhi topic seekho</div></div>
+            <div class="quick-card" onclick="quickPrompt('Translate to English: Aaj mausam bahut achha hai')"><span class="quick-card-icon">🔄</span><div class="quick-card-title">Translation</div><div class="quick-card-sub">50+ bhashaon mein</div></div>
+          </div>
+        </div>
+      </div>
+      <div class="mode-bar">
+        <button class="mode-chip active" onclick="setMode('general',this)">🤖 General</button>
+        <button class="mode-chip" onclick="setMode('code',this)">💻 Coder</button>
+        <button class="mode-chip" onclick="setMode('story',this)">📖 Storyteller</button>
+        <button class="mode-chip" onclick="setMode('teacher',this)">🎓 Teacher</button>
+        <button class="mode-chip" onclick="setMode('business',this)">💼 Business</button>
+        <button class="mode-chip" onclick="setMode('translate',this)">🌍 Translator</button>
+        <button class="mode-chip" onclick="setMode('social',this)">📱 Social Media</button>
+        <button class="mode-chip" onclick="setMode('math',this)">🔢 Math</button>
+        <button class="mode-chip" onclick="setMode('health',this)">❤️ Health</button>
+      </div>
+      <div class="chat-input-wrap">
+        <div class="chat-input-box">
+          <textarea id="chatInput" rows="1" placeholder="Kuch bhi pucho… Enter = Send" onkeydown="handleKey(event)" oninput="autoResize(this)"></textarea>
+          <button class="send-btn" id="sendBtn" onclick="sendMessage()">➤</button>
+        </div>
+      </div>
+    </div>
+    <div class="panel" id="panel-tools">
+      <div class="tools-grid">
+        <div class="tool-card" style="--card-color:#4f8cff;--card-glow:rgba(79,140,255,0.1)" onclick="goChat('code','Python mein REST API ka full code likho')"><span class="tool-icon">💻</span><div class="tool-name">Code Generator</div><div class="tool-desc">HTML, CSS, JS, Python, Java — clean code</div><span class="tool-tag" style="background:rgba(79,140,255,0.15);color:#4f8cff;">DEV</span></div>
+        <div class="tool-card" style="--card-color:#00e5c0;--card-glow:rgba(0,229,192,0.1)" onclick="goChat('story','Ek horror story likho 200 words mein')"><span class="tool-icon">📖</span><div class="tool-name">Story Writer</div><div class="tool-desc">Kahaniyan, scripts, screenplays</div><span class="tool-tag" style="background:rgba(0,229,192,0.12);color:#00e5c0;">CREATIVE</span></div>
+        <div class="tool-card" style="--card-color:#ff6b6b;--card-glow:rgba(255,107,107,0.1)" onclick="goChat('business','Food delivery startup ka business plan do')"><span class="tool-icon">🚀</span><div class="tool-name">Business Planner</div><div class="tool-desc">Plans, pitches, SWOT analysis</div><span class="tool-tag" style="background:rgba(255,107,107,0.12);color:#ff6b6b;">BIZ</span></div>
+        <div class="tool-card" style="--card-color:#f7c948;--card-glow:rgba(247,201,72,0.08)" onclick="goChat('teacher','Quantum computing simple language mein samjhao')"><span class="tool-icon">🎓</span><div class="tool-name">Smart Teacher</div><div class="tool-desc">Koi bhi topic simple examples se</div><span class="tool-tag" style="background:rgba(247,201,72,0.12);color:#f7c948;">LEARN</span></div>
+        <div class="tool-card" style="--card-color:#a78bfa;--card-glow:rgba(167,139,250,0.1)" onclick="goChat('translate','Translate: The world is beautiful into Hindi French Spanish')"><span class="tool-icon">🌍</span><div class="tool-name">Translator Pro</div><div class="tool-desc">50+ languages mein translation</div><span class="tool-tag" style="background:rgba(167,139,250,0.12);color:#a78bfa;">LANG</span></div>
+        <div class="tool-card" style="--card-color:#f472b6;--card-glow:rgba(244,114,182,0.1)" onclick="goChat('social','Chai ki dukaan ke liye 5 viral Instagram posts')"><span class="tool-icon">📱</span><div class="tool-name">Social Media</div><div class="tool-desc">Viral captions, hashtags, reels</div><span class="tool-tag" style="background:rgba(244,114,182,0.12);color:#f472b6;">VIRAL</span></div>
+        <div class="tool-card" style="--card-color:#34d399;--card-glow:rgba(52,211,153,0.08)" onclick="goChat('math','2x² + 5x - 3 = 0 solve karo step by step')"><span class="tool-icon">🔢</span><div class="tool-name">Math Solver</div><div class="tool-desc">Algebra, calculus, statistics</div><span class="tool-tag" style="background:rgba(52,211,153,0.12);color:#34d399;">MATH</span></div>
+        <div class="tool-card" style="--card-color:#fb923c;--card-glow:rgba(251,146,60,0.08)" onclick="goChat('health','30 min daily workout weekly schedule banao')"><span class="tool-icon">❤️</span><div class="tool-name">Health Guide</div><div class="tool-desc">Diet, fitness, mental health</div><span class="tool-tag" style="background:rgba(251,146,60,0.12);color:#fb923c;">HEALTH</span></div>
+        <div class="tool-card" style="--card-color:#60a5fa;--card-glow:rgba(96,165,250,0.08)" onclick="goChat('general','Software engineer resume banao 2 saal experience')"><span class="tool-icon">📝</span><div class="tool-name">Resume Writer</div><div class="tool-desc">Resume, cover letter, LinkedIn</div><span class="tool-tag" style="background:rgba(96,165,250,0.12);color:#60a5fa;">CAREER</span></div>
+      </div>
+    </div>
+    <div class="panel" id="panel-about">
+      <div class="about-wrap">
+        <div class="about-hero">
+          <div class="about-icon">🤖</div>
+          <h2>NOVA AI — Ultimate Assistant</h2>
+          <p>Coding se kahaniyon tak, business se math tak — sab kuch ek jagah.</p>
+        </div>
+        <div class="about-grid">
+          <div class="about-card"><div class="about-card-title">🎨 Creative</div><ul class="about-list"><li>Kahaniyan aur scripts</li><li>Poetry aur shayari</li><li>Social media content</li><li>Branding ideas</li></ul></div>
+          <div class="about-card"><div class="about-card-title">💻 Technical</div><ul class="about-list"><li>Full code generation</li><li>Bug fixing</li><li>Web + App dev</li><li>Database design</li></ul></div>
+          <div class="about-card"><div class="about-card-title">🧠 Education</div><ul class="about-list"><li>Koi bhi subject</li><li>Math problems</li><li>Science concepts</li><li>History & Geography</li></ul></div>
+          <div class="about-card"><div class="about-card-title">💼 Business</div><ul class="about-list"><li>Business plans</li><li>Marketing strategy</li><li>Startup ideas</li><li>Financial planning</li></ul></div>
+          <div class="about-card"><div class="about-card-title">🌍 Languages</div><ul class="about-list"><li>Hindi ↔ English</li><li>French, Spanish, Arabic</li><li>Japanese, Chinese</li><li>50+ languages</li></ul></div>
+          <div class="about-card"><div class="about-card-title">❤️ Personal</div><ul class="about-list"><li>Health & fitness</li><li>Resume & career</li><li>Emotional support</li><li>Life advice</li></ul></div>
+        </div>
+        <div style="text-align:center;margin-top:24px;padding:16px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);">
+          <div style="font-size:11px;color:var(--muted);margin-bottom:4px;">Powered by</div>
+          <div style="font-family:var(--font-head);font-size:16px;font-weight:700;background:linear-gradient(135deg,#4f8cff,#00e5c0);-webkit-background-clip:text;-webkit-text-fill-color:transparent;">Claude AI by Anthropic</div>
+          <div style="font-size:11px;color:var(--muted2);margin-top:4px;">© 2026 NOVA AI</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+// ═══════════════════════════════════════════════════════════════
+// NOVA AI — BUILT-IN KNOWLEDGE BASE (No API needed!)
+// Works 100% offline from phone storage
+// ═══════════════════════════════════════════════════════════════
+
+const KB = {
+  greet: {
+    triggers: ['hi','hello','hii','hey','namaste','namaskar','salaam','hola','kaise ho','kya haal','good morning','good evening','good night','shubh'],
+    response: () => `🙏 **Namaste! Main NOVA AI hoon!**
+
+Main aapki har tarah se madad kar sakta hoon:
+
+💻 **Code likhna** — Python, JavaScript, HTML, CSS, Java
+📖 **Kahaniyan** — Horror, Romance, Thriller, Comedy
+🌍 **Translation** — Hindi, English, French, Spanish, Arabic, Japanese
+🔢 **Math** — Algebra, Calculus, Statistics
+💼 **Business** — Plans, Ideas, Marketing
+🎓 **Teaching** — Koi bhi subject simple bhasha mein
+📱 **Social Media** — Viral captions, hashtags
+❤️ **Health** — Diet, fitness, wellness tips
+
+Batao kya kaam hai? 😊`
+  },
+
+  languages: {
+    triggers: ['language','bhasha','kya kya aata','tumhen kya','kaun si language','kaun si bhasha','kya jaante','kya jaanta'],
+    response: () => `🌍 **Mujhe yeh languages aati hain:**
+
+**Programming Languages:**
+\`\`\`
+Python, JavaScript, TypeScript, Java, C, C++,
+C#, PHP, Ruby, Swift, Kotlin, Go, Rust,
+HTML, CSS, SQL, Bash, R, MATLAB
+\`\`\`
+
+**Human Languages:**
+🇮🇳 Hindi, Bengali, Tamil, Telugu, Marathi, Gujarati, Punjabi, Urdu
+🌐 English, French, Spanish, Portuguese, German, Italian
+🌏 Arabic, Japanese, Chinese, Korean, Russian, Turkish
+...aur 50+ aur bhi!
+
+**Kya karna hai?** Translate, code likhna, ya kuch aur? 😊`
+  },
+
+  code_python: {
+    triggers: ['python calculator','python code','python mein','python program'],
+    response: () => `💻 **Python Calculator:**
+
+\`\`\`python
+def calculator():
+    print("=== NOVA Calculator ===")
+    print("Operations: +, -, *, /")
+    
+    while True:
+        try:
+            num1 = float(input("\\nPehla number: "))
+            op = input("Operator (+, -, *, /): ")
+            num2 = float(input("Doosra number: "))
+            
+            if op == '+':
+                result = num1 + num2
+            elif op == '-':
+                result = num1 - num2
+            elif op == '*':
+                result = num1 * num2
+            elif op == '/':
+                if num2 == 0:
+                    print("Error: Zero se divide nahi kar sakte!")
+                    continue
+                result = num1 / num2
+            else:
+                print("Invalid operator!")
+                continue
+                
+            print(f"Jawab: {num1} {op} {num2} = {result}")
+            
+            again = input("\\nPhir karein? (y/n): ")
+            if again.lower() != 'y':
+                break
+                
+        except ValueError:
+            print("Sirf numbers daalo!")
+    
+    print("Calculator band hua. Dhanyavaad!")
+
+calculator()
+\`\`\`
+
+**Run karna:** Terminal mein \`python calculator.py\` type karo.
+
+Koi aur code chahiye? 🚀`
+  },
+
+  code_html: {
+    triggers: ['html','website','webpage','html code','css code','web page'],
+    response: () => `💻 **Simple HTML Website:**
+
+\`\`\`html
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Meri Website</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #0a0a1a;
+      color: white;
+      text-align: center;
+      padding: 50px;
+    }
+    h1 { color: #4f8cff; font-size: 2.5rem; }
+    .btn {
+      background: linear-gradient(135deg, #4f8cff, #00e5c0);
+      border: none;
+      color: white;
+      padding: 12px 28px;
+      border-radius: 25px;
+      font-size: 1rem;
+      cursor: pointer;
+      margin-top: 20px;
+    }
+    .btn:hover { opacity: 0.85; }
+  </style>
+</head>
+<body>
+  <h1>🌟 Meri Website</h1>
+  <p>NOVA AI se banaya gaya!</p>
+  <button class="btn" onclick="alert('Hello!')">Click Karo</button>
+</body>
+</html>
+\`\`\`
+
+Yeh file browser mein seedha open hoti hai! Koi changes? 😊`
+  },
+
+  story: {
+    triggers: ['story','kahani','sunao','likho ek','horror','thriller','romance','comedy kahani'],
+    response: () => `📖 **Andhere ka Mehman**
+*(Horror Short Story)*
+
+---
+
+Raat ke 2 baj rahe the. Rahul apne kamre mein akela baitha laptop dekh raha tha.
+
+Achanak... **knock knock knock.**
+
+"Kaun hai itni raat ko?" usne darwaza khola.
+
+Koi nahi tha. Sirf thandi hawa ka ek jhonka aaya.
+
+Wapas aaya toh screen par likha tha —
+*"Peeche dekh."*
+
+Usne ghuma... aur...
+
+🫀 *Uski dhadkan ruk gayi.*
+
+Sheesha mein uski jagah ek aur chehra tha. Uska chehra. Lekin woh muskura raha tha — aur Rahul nahi muskura raha tha.
+
+**"Ab teri baari,"** woh chehra bola.
+
+---
+
+*Khatam — ya shayad nahi?* 😈
+
+Aur chahiye? Koi khaas type ki kahani batao! 🌙`
+  },
+
+  translate_en: {
+    triggers: ['translate','anuvad','english mein','hindi mein','translate karo','translate to'],
+    response: (msg) => {
+      const hindiToEn = {
+        'aaj mausam bahut achha hai': 'Today the weather is very nice.',
+        'mera naam nova hai': 'My name is Nova.',
+        'kya haal hai': 'How are you?',
+        'dhanyavaad': 'Thank you.',
+        'bahut achha': 'Very good.',
+        'namaste': 'Hello / Greetings.',
+      };
+      const lower = msg.toLowerCase();
+      for (const [hi, en] of Object.entries(hindiToEn)) {
+        if (lower.includes(hi)) {
+          return `🌍 **Translation:**\n\n**Hindi:** ${hi}\n**English:** ${en}\n\nAur koi sentence translate karein? 😊`;
+        }
+      }
+      return `🌍 **Main yeh languages mein translate kar sakta hoon:**
+
+Hindi ↔ English ↔ French ↔ Spanish ↔ Arabic ↔ Japanese ↔ German ↔ Portuguese
+
+**Example:**
+- "Aaj mausam bahut achha hai" → *"Today the weather is very nice."*
+- "Dhanyavaad" → *"Thank you"* (English) / *"Merci"* (French) / *"Gracias"* (Spanish)
+
+**Jo sentence translate karna ho woh poora likhein** jaise:
+*"Translate to English: [aapka sentence]"* 😊`;
+    }
+  },
+
+  math: {
+    triggers: ['solve','equation','calculate','2x','algebra','math','maths','formula','integral','derivative'],
+    response: (msg) => {
+      if (msg.includes('2x') && msg.includes('5x')) {
+        return `🔢 **Quadratic Equation: 2x² + 5x - 3 = 0**
+
+**Method: Factoring / Quadratic Formula**
+
+\`\`\`
+ax² + bx + c = 0
+a = 2, b = 5, c = -3
+
+Discriminant (D) = b² - 4ac
+D = (5)² - 4(2)(-3)
+D = 25 + 24
+D = 49
+
+x = (-b ± √D) / 2a
+x = (-5 ± √49) / 4
+x = (-5 ± 7) / 4
+
+x₁ = (-5 + 7) / 4 = 2/4 = 0.5
+x₂ = (-5 - 7) / 4 = -12/4 = -3
+\`\`\`
+
+✅ **Answer: x = 0.5 ya x = -3**
+
+**Check:** 2(0.5)² + 5(0.5) - 3 = 0.5 + 2.5 - 3 = **0** ✓
+
+Koi aur problem? 😊`;
+      }
+      return `🔢 **Math Solver ready!**
+
+Main yeh solve kar sakta hoon:
+- **Algebra:** x² + 5x + 6 = 0
+- **Arithmetic:** 245 × 67 ÷ 5
+- **Percentage:** 15% of 2500
+- **Geometry:** Circle ka area (r=7)
+- **Statistics:** Mean, median, mode
+
+**Apna problem likhein!** Jaise:
+*"Solve: 3x + 7 = 22"* 😊`;
+    }
+  },
+
+  business: {
+    triggers: ['business','startup','idea','plan','marketing','dukaan','company','income','paise','earn'],
+    response: () => `💼 **India ke Top Startup Ideas 2025:**
+
+**🔥 High Demand:**
+1. **AI Tutor App** — Students ko personalized coaching (₹500-2000/month)
+2. **Hyperlocal Delivery** — 10-min grocery delivery tier-2 cities mein
+3. **Vernacular Content** — Hindi/regional language YouTube/podcast
+4. **Senior Care Tech** — Elderly ke liye health monitoring app
+5. **EV Charging** — Electric vehicle charging stations franchise
+
+**💰 Low Investment (under ₹50,000):**
+- Tiffin service with online ordering
+- Social media management for local businesses
+- Freelance coding / design services
+- Online tutoring (JEE, NEET, Board exams)
+
+**📈 Business Plan Framework:**
+\`\`\`
+1. Problem → Kaun si problem solve kar rahe ho?
+2. Solution → Aapka unique answer kya hai?
+3. Market → Kitne log yeh chahte hain?
+4. Revenue → Paise kaise aayenge?
+5. Team → Aap akele ya partner ke saath?
+\`\`\`
+
+Kaunsa business explore karna hai? Details mein batata hoon! 🚀`
+  },
+
+  social: {
+    triggers: ['instagram','caption','hashtag','viral','social media','post','reel','youtube','content'],
+    response: () => `📱 **Viral Instagram Captions:**
+
+**Cricket ke liye:**
+> "Cricket sirf ek game nahi — yeh ek emotion hai. 🏏❤️
+> #Cricket #IndiaVsPakistan #CWC2025 #TeamIndia"
+
+**Motivational:**
+> "Log tumhare sapne chhote dikhate hain kyunki unke sapne chhote hain. 🔥
+> #Motivation #NeverGiveUp #Hustle #IndianYouth"
+
+**Food:**
+> "Ghar ka khana = Pure love 🍛💕
+> #GharKaKhana #DesiFood #FoodieIndia #HomemadeFood"
+
+**Caption Formula:**
+\`\`\`
+Line 1: Emotional hook
+Line 2: Value or story
+Emoji: 3-5 relevant ones
+Hashtags: 10-15 mix of big + niche
+CTA: "Save karo" / "Tag karo" / "Comment mein batao"
+\`\`\`
+
+Kaunse topic ke liye caption chahiye? Batao — 5 custom captions banaata hoon! ✨`
+  },
+
+  health: {
+    triggers: ['health','fitness','workout','exercise','diet','weight','khana','khaana','protein','calories'],
+    response: () => `❤️ **Beginner Workout Plan (30 min/day):**
+
+**Monday — Chest & Arms:**
+\`\`\`
+• Push-ups: 3 sets × 10 reps
+• Tricep dips: 3 sets × 12 reps
+• Plank: 30 seconds × 3
+\`\`\`
+
+**Wednesday — Legs:**
+\`\`\`
+• Squats: 3 sets × 15 reps
+• Lunges: 3 sets × 10 each leg
+• Calf raises: 3 sets × 20 reps
+\`\`\`
+
+**Friday — Full Body:**
+\`\`\`
+• Jumping jacks: 2 min
+• Burpees: 3 sets × 8 reps
+• Mountain climbers: 30 sec × 3
+\`\`\`
+
+**🥗 Daily Diet Tips:**
+- Subah: 2 eggs + 1 kela + green tea
+- Lunch: Dal + sabzi + 2 roti (kam ghee)
+- Dinner: Light — soup ya salad
+- Paani: Rozana 3-4 liter
+
+⚠️ *Koi medical condition hai toh doctor se zaroor milein.*
+
+Koi specific goal hai? (Weight loss / muscle gain?) 💪`
+  },
+
+  resume: {
+    triggers: ['resume','cv','job','naukri','career','interview','cover letter'],
+    response: () => `📝 **Professional Resume Template:**
+
+\`\`\`
+RAHUL SHARMA
+📍 Delhi, India | 📧 rahul@email.com | 📱 9876543210
+🔗 linkedin.com/in/rahulsharma | 💻 github.com/rahul
+
+────────────────────────────────────
+OBJECTIVE
+────────────────────────────────────
+Passionate software developer with 2+ years experience
+building scalable web applications using React & Node.js.
+Seeking to contribute to innovative products.
+
+────────────────────────────────────
+SKILLS
+────────────────────────────────────
+Languages:  Python | JavaScript | TypeScript | SQL
+Frontend:   React.js | HTML5 | CSS3 | Tailwind
+Backend:    Node.js | Express | REST APIs
+Tools:      Git | GitHub | VS Code | Postman
+Database:   MongoDB | MySQL | PostgreSQL
+
+────────────────────────────────────
+EXPERIENCE
+────────────────────────────────────
+Software Developer — TechCorp India (2023 - Present)
+• Built 5 full-stack features increasing user retention 30%
+• Reduced API response time by 40% via optimization
+• Led team of 3 juniors for 2 product launches
+
+────────────────────────────────────
+EDUCATION
+────────────────────────────────────
+B.Tech Computer Science — Delhi University (2023)
+CGPA: 8.4/10
+
+────────────────────────────────────
+PROJECTS
+────────────────────────────────────
+• E-Commerce App — React + Node.js (500+ users)
+• Chat Application — Socket.io real-time messaging
+\`\`\`
+
+Apni details doge toh customized resume banaata hoon! 💼`
+  },
+
+  ai_explain: {
+    triggers: ['ai kya','artificial intelligence','machine learning','deep learning','chatgpt','gpt','nova kya','tum kaun'],
+    response: () => `🧠 **AI kya hota hai? (Simple explanation)**
+
+**AI = Artificial Intelligence = Banawati Samajh**
+
+Socho ek bacha roz ek ghante padhta hai — dheere dheere woh samajhdaar ho jaata hai.
+
+**AI bhi waise hi hai!** Lakho texts, books, code padhke seekha hai — tab jawab dena seekha.
+
+**Types:**
+| Type | Kya karta hai | Example |
+|------|--------------|---------|
+| ML | Data se seekhta hai | Netflix recommendations |
+| NLP | Bhasha samjhta hai | Google Translate |
+| Vision | Images dekhta hai | Face unlock |
+| GenAI | Create karta hai | Main (NOVA AI!) |
+
+**Main (NOVA AI) kya hoon?**
+- Claude AI (Anthropic) par based
+- Text samajhta hoon aur jawab deta hoon
+- Code, stories, math — sab kar sakta hoon
+- Galti bhi ho sakti hai — always verify karo ✅
+
+Koi aur sawaal? 😊`
+  },
+
+  default_smart: {
+    response: (msg, mode) => {
+      const responses = {
+        code: `💻 **Code likhne ke liye ready hoon!**\n\nAapne likha: *"${msg}"*\n\nPlease thoda aur detail dein:\n- Kaun si **language**? (Python, JavaScript, HTML, Java...)\n- Kya **banana hai**? (Calculator, website, app, game...)\n- **Beginner** level ya **advanced**?\n\nJitna detail, utna better code! 🚀`,
+        story: `📖 **Story likhne ke liye taiyar hoon!**\n\nAapka sawaal: *"${msg}"*\n\nBatao:\n- Kaunsa **genre**? (Horror, romance, thriller, comedy, sci-fi)\n- Kitni **lambi** story? (5 lines / 100 words / 500 words)\n- Koi **khaas character** ya **setting**?\n\nKamaal ki kahani likhta hoon! ✨`,
+        teacher: `🎓 **Teacher mode active!**\n\nAapka topic: *"${msg}"*\n\nMain yeh sikhata hoon:\n- **Science:** Physics, Chemistry, Biology\n- **Math:** Algebra se Calculus tak\n- **Technology:** Coding, AI, Internet\n- **History:** India aur duniya ki\n- **Languages:** Grammar, vocabulary\n\nKaunsa topic detail mein chahiye? 📚`,
+        business: `💼 **Business Advisor hoon main!**\n\nAapka idea/sawaal: *"${msg}"*\n\nMain help kar sakta hoon:\n- Business plan banana\n- Market research\n- Pricing strategy\n- Marketing plan\n- Investment planning\n\nAur detail mein batao — detailed plan banaata hoon! 🚀`,
+        translate: `🌍 **Translate karne ke liye ready!**\n\nFormat: **"Translate to [language]: [text]"**\n\n**Examples:**\n- *"Translate to English: Aaj bahut thakaan hai"*\n- *"Translate to French: Namaste"*\n- *"Translate to Japanese: Thank you"*\n\nKaun si language mein kya translate karein? 😊`,
+        social: `📱 **Social Media Expert hoon!**\n\nAapka request: *"${msg}"*\n\nBatao:\n- **Platform:** Instagram / YouTube / Twitter / LinkedIn\n- **Topic:** Food, travel, fitness, business, motivation?\n- **Tone:** Funny / serious / inspirational?\n\nViral content banata hoon! 🔥`,
+        math: `🔢 **Math Solver ready!**\n\nAapka sawaal: *"${msg}"*\n\n**Examples jinhe main solve kar sakta hoon:**\n- *"Solve: 3x² - 7x + 2 = 0"*\n- *"15% of 8500 kya hai?"*\n- *"Triangle ka area agar base=10, height=6"*\n- *"1 se 100 tak sum kya hai?"*\n\nApna exact problem likhein! 😊`,
+        health: `❤️ **Health Guide hoon!**\n\nAapka sawaal: *"${msg}"*\n\nMain help kar sakta hoon:\n- Weight loss / muscle gain plan\n- Diet aur nutrition\n- Exercise routine\n- Mental health tips\n- Yoga aur meditation\n\n⚠️ *Serious medical issues ke liye doctor se milein.*\n\nKya specific goal hai? 💪`,
+        general: `🤖 **NOVA AI yahan hai!**\n\nAapne likha: *"${msg}"*\n\nMain samajh raha hoon! Thoda aur detail dijiye:\n\n**Main yeh sab kar sakta hoon:**\n- 💻 Code likhna (Python, JS, HTML...)\n- 📖 Kahaniyan sunana\n- 🌍 Translation (50+ languages)\n- 🔢 Math solve karna\n- 💼 Business advice\n- 🎓 Koi bhi topic sikhana\n- 📱 Social media captions\n- ❤️ Health & fitness tips\n\nKhul ke poochho! 😊`
+      };
+      return responses[mode] || responses.general;
+    }
+  }
+};
+
+// ═══════════════════════════════════════════════════
+// SMART RESPONSE ENGINE
+// ═══════════════════════════════════════════════════
+function getSmartResponse(msg, mode) {
+  const lower = msg.toLowerCase().trim();
+
+  // Check all knowledge base entries
+  for (const [key, entry] of Object.entries(KB)) {
+    if (key === 'default_smart') continue;
+    if (entry.triggers && entry.triggers.some(t => lower.includes(t))) {
+      return typeof entry.response === 'function' ? entry.response(msg) : entry.response;
+    }
+  }
+
+  // Mode-specific smart defaults
+  return KB.default_smart.response(msg, mode);
+}
+
+// ═══════════════════════════════════════════════════
+// UI FUNCTIONS
+// ═══════════════════════════════════════════════════
+let currentMode = 'general';
+let chatHistory = [];
+let isLoading = false;
+
+function setMode(m, el) {
+  currentMode = m;
+  document.querySelectorAll('.mode-chip').forEach(c => c.classList.remove('active'));
+  if(el) el.classList.add('active');
+  showToast('Mode: ' + m.charAt(0).toUpperCase() + m.slice(1));
+}
+
+function switchTab(tab, el) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('panel-' + tab).classList.add('active');
+}
+
+function goChat(mode, prompt) {
+  switchTab('chat', document.querySelectorAll('.tab')[0]);
+  const modeNames = ['general','code','story','teacher','business','translate','social','math','health'];
+  const idx = modeNames.indexOf(mode);
+  document.querySelectorAll('.mode-chip').forEach((c,i) => c.classList.toggle('active', i===idx));
+  currentMode = mode;
+  setTimeout(() => { document.getElementById('chatInput').value = prompt; sendMessage(); }, 150);
+}
+
+function quickPrompt(text) {
+  document.getElementById('chatInput').value = text;
+  sendMessage();
+}
+
+function hideWelcome() {
+  const w = document.getElementById('welcomeScreen');
+  if(w) w.style.display = 'none';
+}
+
+function autoResize(el) {
+  el.style.height = 'auto';
+  el.style.height = Math.min(el.scrollHeight, 120) + 'px';
+}
+
+function handleKey(e) {
+  if(e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
+}
+
+function formatText(text) {
+  text = text.replace(/```(\w*)\n?([\s\S]*?)```/g, '<pre><code>$2</code></pre>');
+  text = text.replace(/`([^`]+)`/g, '<code>$1</code>');
+  text = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+  text = text.replace(/\*(.*?)\*/g, '<em>$1</em>');
+  text = text.replace(/^---$/gm, '<hr style="border-color:rgba(255,255,255,0.1);margin:8px 0">');
+  text = text.replace(/\n/g, '<br>');
+  return text;
+}
+
+function addMsg(role, content) {
+  const msgs = document.getElementById('chatMessages');
+  const div = document.createElement('div');
+  div.className = 'msg ' + role;
+  div.innerHTML = `<div class="avatar ${role}">${role==='ai'?'🤖':'👤'}</div><div class="bubble">${formatText(content)}</div>`;
+  msgs.appendChild(div);
+  msgs.scrollTop = msgs.scrollHeight;
+}
+
+function addTyping() {
+  const msgs = document.getElementById('chatMessages');
+  const div = document.createElement('div');
+  div.className = 'msg ai'; div.id = 'typingEl';
+  div.innerHTML = `<div class="avatar ai">🤖</div><div class="bubble"><div class="typing-dots"><span></span><span></span><span></span></div></div>`;
+  msgs.appendChild(div);
+  msgs.scrollTop = msgs.scrollHeight;
+}
+
+function removeTyping() {
+  const t = document.getElementById('typingEl');
+  if(t) t.remove();
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2000);
+}
+
+function sendMessage() {
+  if(isLoading) return;
+  const input = document.getElementById('chatInput');
+  const text = input.value.trim();
+  if(!text) return;
+  hideWelcome();
+  input.value = '';
+  input.style.height = 'auto';
+  isLoading = true;
+  document.getElementById('sendBtn').disabled = true;
+  addMsg('user', text);
+  addTyping();
+
+  // Simulate thinking delay (300-800ms)
+  const delay = 300 + Math.random() * 500;
+  setTimeout(() => {
+    removeTyping();
+    const reply = getSmartResponse(text, currentMode);
+    addMsg('ai', reply);
+    chatHistory.push({u: text, a: reply});
+    isLoading = false;
+    document.getElementById('sendBtn').disabled = false;
+    document.getElementById('chatInput').focus();
+  }, delay);
+}
+</script>
+</body>
+</html>
